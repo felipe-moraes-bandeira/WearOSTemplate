@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="background">#050505</color>
+    <color name="surface">#101010</color>
+
+    <color name="mclaren">#FF7900</color>
+    <color name="mclaren_dark">#D86400</color>
+    <color name="mclaren_light">#FFAA3D</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="gray">#BDBDBD</color>
+
+</resources>
