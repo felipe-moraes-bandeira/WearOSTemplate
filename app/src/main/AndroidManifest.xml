@@ -19,9 +19,7 @@
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
-        <activity
-            android:name=".presentation.RunningActivity"
-            android:exported="false"/>
+
 
         <!-- Segunda tela -->
         <activity

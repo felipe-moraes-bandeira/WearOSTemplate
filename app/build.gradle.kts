@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.gms.google-services")
 }
 
@@ -42,7 +42,8 @@ android {
 dependencies {
 
     implementation(libs.play.services.wearable)
-    implementation(platform(libs.compose.bom))
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.database)
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
@@ -58,7 +59,7 @@ dependencies {
     implementation(libs.play.services.base)
     implementation(libs.play.services.basement)
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.database)
+
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
