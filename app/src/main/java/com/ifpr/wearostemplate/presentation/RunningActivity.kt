@@ -10,9 +10,6 @@ import androidx.activity.ComponentActivity
 import com.google.firebase.database.FirebaseDatabase
 import com.ifpr.wearostemplate.R
 import com.ifpr.wearostemplate.presentation.baseclasses.Corrida
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class RunningActivity : ComponentActivity() {
 
@@ -21,90 +18,249 @@ class RunningActivity : ComponentActivity() {
 
     private var segundos = 0
 
-    private val handler = Handler(Looper.getMainLooper())
+    private val handler =
+        Handler(Looper.getMainLooper())
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-
-        super.onCreate(savedInstanceState)
-
-        setContentView(R.layout.activity_running)
-
-        txtTempo = findViewById(R.id.txtTempo)
-        btnStop = findViewById(R.id.btnStop)
-
-        iniciarCronometro()
-
-        btnStop.setOnClickListener {
-
-            handler.removeCallbacksAndMessages(null)
-
-            val distanciaKm = 2.5
-            val tempoSegundos = segundos.toLong()
-
-            salvarCorrida(distanciaKm, tempoSegundos)
-
-            Toast.makeText(this, "Corrida salva!", Toast.LENGTH_SHORT).show()
-
-            finish()
-        }
-    }
-
-    private fun iniciarCronometro() {
-
-        handler.post(object : Runnable {
+    private val cronometro =
+        object : Runnable {
 
             override fun run() {
 
                 segundos++
 
-                val minutos = segundos / 60
-                val resto = segundos % 60
+                val minutos =
+                    segundos / 60
 
-                txtTempo.text = String.format("%02d:%02d", minutos, resto)
+                val resto =
+                    segundos % 60
 
-                handler.postDelayed(this, 1000)
+                txtTempo.text =
+                    String.format(
+                        "%02d:%02d",
+                        minutos,
+                        resto
+                    )
+
+                handler.postDelayed(
+                    this,
+                    1000L
+                )
             }
+        }
 
-        })
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
 
-    }
+        super.onCreate(savedInstanceState)
 
-    private fun salvarCorrida(distanciaKm: Double, tempoSegundos: Long) {
-
-        val database = FirebaseDatabase.getInstance()
-        val referencia = database.getReference("corridas")
-
-        val id = referencia.push().key ?: return
-
-        val data = SimpleDateFormat(
-            "dd/MM/yyyy HH:mm",
-            Locale.getDefault()
-        ).format(Date())
-
-        val ritmo = calcularRitmo(distanciaKm, tempoSegundos)
-
-        val corrida = Corrida(
-            distanciaKm,
-            tempoSegundos,
-            ritmo,
-            data
+        setContentView(
+            R.layout.activity_running
         )
 
-        referencia.child(id).setValue(corrida)
+        txtTempo =
+            findViewById(R.id.txtTempo)
+
+        btnStop =
+            findViewById(R.id.btnStop)
+
+        iniciarCronometro()
+
+        btnStop.setOnClickListener {
+
+            pararCronometro()
+
+            val distanciaKm =
+                2.5
+
+            val tempoSegundos =
+                segundos.toLong()
+
+            salvarCorrida(
+                distanciaKm,
+                tempoSegundos
+            )
+        }
     }
+
+    // =========================================================
+    // CRONÔMETRO
+    // =========================================================
+
+    private fun iniciarCronometro() {
+
+        segundos = 0
+
+        txtTempo.text = "00:00"
+
+        handler.postDelayed(
+            cronometro,
+            1000L
+        )
+    }
+
+    private fun pararCronometro() {
+
+        handler.removeCallbacks(
+            cronometro
+        )
+    }
+
+    // =========================================================
+    // SALVAR CORRIDA
+    // =========================================================
+
+    private fun salvarCorrida(
+        distanciaKm: Double,
+        tempoSegundos: Long
+    ) {
+
+        val database =
+            FirebaseDatabase.getInstance()
+
+        val referencia =
+            database.getReference("corridas")
+
+        val id =
+            referencia
+                .push()
+                .key
+                ?: return
+
+        // Ritmo em minutos por km.
+        val ritmo =
+            calcularRitmo(
+                distanciaKm,
+                tempoSegundos
+            )
+
+        // Velocidade média em km/h.
+        val velocidadeMedia =
+            calcularVelocidadeMedia(
+                distanciaKm,
+                tempoSegundos
+            )
+
+        // Peso temporário.
+        // Posteriormente pode vir do Perfil.
+        val pesoKg = 70.0
+
+        val calorias =
+            calcularCalorias(
+                distanciaKm,
+                pesoKg
+            )
+
+        val corrida =
+            Corrida(
+                id = id,
+                distanciaKm = distanciaKm,
+                tempoSegundos = tempoSegundos,
+                ritmoMedio = ritmo,
+                velocidadeMedia = velocidadeMedia,
+                calorias = calorias,
+                data = System.currentTimeMillis()
+            )
+
+        referencia
+            .child(id)
+            .setValue(corrida)
+            .addOnSuccessListener {
+
+                Toast.makeText(
+                    this,
+                    "Corrida salva!",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                finish()
+            }
+            .addOnFailureListener {
+
+                Toast.makeText(
+                    this,
+                    "Erro ao salvar corrida.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    // =========================================================
+    // CALCULAR RITMO
+    // =========================================================
 
     private fun calcularRitmo(
         distanciaKm: Double,
         tempoSegundos: Long
-    ): String {
+    ): Double {
 
-        if (distanciaKm <= 0.0) return "0:00"
+        if (distanciaKm <= 0.0) {
+            return 0.0
+        }
 
-        val segundosPorKm = (tempoSegundos / distanciaKm).toInt()
+        if (tempoSegundos <= 0L) {
+            return 0.0
+        }
 
-        val minutos = segundosPorKm / 60
-        val segundos = segundosPorKm % 60
+        /*
+         * Retorna minutos por quilômetro.
+         *
+         * Exemplo:
+         * 30 minutos / 5 km = 6.0 min/km
+         */
+        val tempoMinutos =
+            tempoSegundos / 60.0
 
-        return "$minutos:${segundos.toString().padStart(2, '0')}"
+        return tempoMinutos /
+                distanciaKm
+    }
+
+    // =========================================================
+    // VELOCIDADE MÉDIA
+    // =========================================================
+
+    private fun calcularVelocidadeMedia(
+        distanciaKm: Double,
+        tempoSegundos: Long
+    ): Double {
+
+        if (distanciaKm <= 0.0) {
+            return 0.0
+        }
+
+        if (tempoSegundos <= 0L) {
+            return 0.0
+        }
+
+        val tempoHoras =
+            tempoSegundos / 3600.0
+
+        return distanciaKm /
+                tempoHoras
+    }
+
+    // =========================================================
+    // CALORIAS
+    // =========================================================
+
+    private fun calcularCalorias(
+        distanciaKm: Double,
+        pesoKg: Double
+    ): Double {
+
+        return distanciaKm *
+                pesoKg *
+                1.036
+    }
+
+    // =========================================================
+    // ON DESTROY
+    // =========================================================
+
+    override fun onDestroy() {
+
+        pararCronometro()
+
+        super.onDestroy()
     }
 }

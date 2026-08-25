@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Permissões -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <uses-feature android:name="android.hardware.type.watch" />
+    <!-- Localização -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Wear OS -->
+    <uses-feature
+        android:name="android.hardware.type.watch"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -12,19 +21,27 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
 
-        <uses-library
-            android:name="com.google.android.wearable"
-            android:required="true" />
-
+        <!-- Indica que o aplicativo é independente (Standalone) -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
 
+        <!-- Biblioteca necessária para Wear OS -->
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="true" />
 
-        <!-- Segunda tela -->
+        <!-- Tela de perfil -->
+        <activity
+            android:name=".presentation.PerfilActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+
+        <!-- Tela de corrida -->
         <activity
             android:name=".presentation.RunningActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
 
         <!-- Tela inicial -->
         <activity
@@ -32,9 +49,9 @@
             android:exported="true">
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
         </activity>
